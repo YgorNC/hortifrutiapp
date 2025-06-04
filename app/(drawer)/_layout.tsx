@@ -1,39 +1,28 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+// app/(drawer)/_layout.tsx
 import { Drawer } from 'expo-router/drawer';
+// Importe seu componente CustomDrawerContent.tsx
+import CustomDrawerContent from '../../components/CustomDrawerContent'; // Ajuste o caminho se seu arquivo for CustomDrawer.tsx
 
-import { HeaderButton } from '../../components/HeaderButton';
-
-const DrawerLayout = () => {
+export default function DrawerLayout() {
   return (
-    <Drawer>
+    <Drawer
+      // Aqui você especifica o componente customizado para o conteúdo do drawer
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        
+        headerShown: false,
+      }}
+    >
+     
       <Drawer.Screen
-        name="index"
+        name="(tabs)" 
         options={{
-          headerTitle: 'Home',
-          drawerLabel: 'Home',
-          drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="(tabs)"
-        options={{
-          headerTitle: 'Tabs',
-          drawerLabel: 'Tabs',
-          drawerIcon: ({ size, color }) => (
-            <MaterialIcons name="border-bottom" size={size} color={color} />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <HeaderButton />
-            </Link>
-          ),
+          title: 'Principal', 
+         
+         
+          headerShown: false,
         }}
       />
     </Drawer>
   );
-};
-
-export default DrawerLayout;
+}
