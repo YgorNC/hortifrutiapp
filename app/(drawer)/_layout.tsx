@@ -1,7 +1,7 @@
-// app/(drawer)/_layout.tsx
+
 import { Drawer } from 'expo-router/drawer';
-// Importe seu componente CustomDrawerContent.tsx
-import CustomDrawerContent from '../../components/CustomDrawerContent'; // Ajuste o caminho se seu arquivo for CustomDrawer.tsx
+
+import CustomDrawerContent from '../../components/CustomDrawerContent'; 
 
 export default function DrawerLayout() {
   return (

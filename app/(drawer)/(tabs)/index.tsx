@@ -37,7 +37,7 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
             <Ionicons name="menu" size={28} color="black" />
           </TouchableOpacity>
-          <Text className="text-lg font-bold text-gray-800">Olá, João!</Text>
+          <Text className="text-xl font-bold text-gray-800">Olá, João!</Text>
           <TouchableOpacity onPress={() => router.push('/(drawer)/notificacoes')}>
             <Ionicons name="notifications-outline" size={24} color="black" />
           </TouchableOpacity>
@@ -45,19 +45,19 @@ export default function HomeScreen() {
 
         <Banner />
 
-        <Text className="text-base font-semibold mt-5 mb-2 text-gray-800">Categorias</Text>
+        <Text className="text-2xl font-semibold mt-5 mb-2 text-gray-800">Categorias</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
           {categories.map((item, index) => (
             <View key={index} className="items-center mr-5">
-              <View className="w-16 h-16 rounded-full bg-lime-100 items-center justify-center">
-                <Image source={item.icon} className="w-10 h-10" />
+              <View className="w-20 h-20 rounded-full bg-lime-100 items-center justify-center">
+                <Image source={item.icon} className="w-15 h-15 bg-contain" />
               </View>
               <Text className="mt-2 text-sm text-gray-700">{item.label}</Text>
             </View>
           ))}
         </ScrollView>
 
-        <Text className="text-base font-semibold mb-3 text-gray-800">Promoções com entrega grátis</Text>
+        <Text className="text-2xl font-semibold mb-3 text-gray-800">Promoções com entrega grátis</Text>
         <FlatList
           data={offers}
           horizontal
@@ -67,19 +67,19 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mr-4 w-36 items-center">
               <Image source={item.image} className="w-16 h-16 mb-2" resizeMode="contain" />
-              <Text className="text-xs text-center text-gray-700 mb-1">{item.name}</Text>
-              <Text className="text-green-600 font-bold text-sm">{item.price}</Text>
+              <Text className="text-xs text-center text-gray-700 mb-1m font-bold">{item.name}</Text>
+              <Text className="text-green-600 font-bold text-xl">{item.price}</Text>
             </View>
           )}
         />
 
-        <Text className="text-base font-semibold mb-3 text-gray-800">Lojas</Text>
-        <View className="space-y-4 mb-6">
+        <Text className="text-base font-semibold mb-3 text-gray-800 gap-5">Lojas</Text>
+        <View className="space-y-4 mb-6 gap-4">
           {stores.map((store, index) => (
             <View key={index} className="flex-row items-center justify-between">
-              <View className="flex-row items-center space-x-3">
-                <Image source={store.icon} className="w-10 h-10 rounded-full" />
-                <Text className="text-sm text-gray-700">{store.name}</Text>
+              <View className="flex-row items-center space-x-3 gap-3">
+                <Image source={store.icon} className="w-15 h-15 rounded-full" />
+                <Text className="text-ms text-xl font-semibold text-gray-700">{store.name}</Text>
               </View>
               <Ionicons name="star-outline" size={20} color="#22c55e" />
             </View>

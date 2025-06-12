@@ -10,7 +10,7 @@ const menuItems = [
   { label: 'Perfil', route: '/(drawer)/perfil', icon: 'person-outline' },
   { label: 'Sacola', route: '/(drawer)/sacola', icon: 'cart-outline' },
   { label: 'Notificações', route: '/(drawer)/notificacoes', icon: 'notifications-outline' },
-  { label: 'Configurações', route: '/(drawer)/configuracoes', icon: 'settings-outline' },
+  { label: 'Configurações', route: '/(drawer)/config', icon: 'settings-outline' },
 ] as const;
 
 export default function CustomDrawerContent(props: any) {

@@ -6,7 +6,7 @@ export default function RegisterOption() {
     const router = useRouter();
 
     return (
-        <View className="flex-1 bg-white px-6 pt-12 ">
+        <View className="flex-1 bg-white px-6 pt-20 ">
             <TouchableOpacity onPress={() => router.back()} className="mb-6">
                 <Ionicons name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
