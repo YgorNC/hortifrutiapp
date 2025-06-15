@@ -1,10 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 
 export default function ConfiguracoesScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
+
+  const handleLinkPress = (link: string) => {
+    router.push({
+      pathname: '/termos',
+      params: { type: link.toLowerCase().replace(/\s+/g, '-') }
+    });
+  };
+
+  const handleLogout = () => {
+    router.replace('/login');
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -44,13 +56,21 @@ export default function ConfiguracoesScreen() {
       <View style={styles.divider} />
 
       <View style={styles.links}>
-        <Text style={styles.link}>Central de ajuda</Text>
-        <Text style={styles.link}>Termos de serviços</Text>
-        <Text style={styles.link}>Código de conduta</Text>
-        <Text style={styles.link}>Privacidade</Text>
+        <TouchableOpacity onPress={() => handleLinkPress('Central de ajuda')}>
+          <Text style={styles.link}>Central de ajuda</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleLinkPress('Termos de serviços')}>
+          <Text style={styles.link}>Termos de serviços</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleLinkPress('Código de conduta')}>
+          <Text style={styles.link}>Código de conduta</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleLinkPress('Privacidade')}>
+          <Text style={styles.link}>Privacidade</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleLogout}>
         <Text style={styles.sair}>Sair</Text>
       </TouchableOpacity>
     </ScrollView>

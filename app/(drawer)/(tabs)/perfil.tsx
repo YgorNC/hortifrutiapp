@@ -19,6 +19,7 @@ export default function Perfil() {
   const [endereco, setEndereco] = useState('Rua das Flores, 123');
   const [telefone, setTelefone] = useState('(11) 91234-5678');
   const [email, setEmail] = useState('joao@email.com');
+  const [editando, setEditando] = useState(false);
 
   return (
     <KeyboardAvoidingView
@@ -69,6 +70,7 @@ export default function Perfil() {
                 onChangeText={setNome}
                 placeholder="Digite seu nome"
                 placeholderTextColor="#9CA3AF"
+                editable={editando}
               />
             </View>
           </View>
@@ -85,6 +87,7 @@ export default function Perfil() {
                 placeholder="12345-678"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="numeric"
+                editable={editando}
               />
             </View>
           </View>
@@ -100,6 +103,7 @@ export default function Perfil() {
                 onChangeText={setEndereco}
                 placeholder="Rua das Flores, 123"
                 placeholderTextColor="#9CA3AF"
+                editable={editando}
               />
             </View>
           </View>
@@ -116,6 +120,7 @@ export default function Perfil() {
                 placeholder="(11) 91234-5678"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="phone-pad"
+                editable={editando}
               />
             </View>
           </View>
@@ -132,6 +137,7 @@ export default function Perfil() {
                 placeholder="seu-email@exemplo.com"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
+                editable={editando}
               />
             </View>
           </View>
@@ -139,11 +145,16 @@ export default function Perfil() {
           {/* Botão: Atualizar Dados (exemplo extra) */}
           <TouchableOpacity
             onPress={() => {
-              // Aqui você poderia salvar as alterações
+              if (editando) {
+                // Aqui você poderia salvar as alterações
+                setEditando(false);
+              } else {
+                setEditando(true);
+              }
             }}
             className="bg-green-600 py-3 rounded-full items-center mb-2 shadow-md"
           >
-            <Text className="text-white font-semibold text-base">Atualizar</Text>
+            <Text className="text-white font-semibold text-base">{editando ? 'Salvar' : 'Atualizar'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -151,14 +162,14 @@ export default function Perfil() {
         <TouchableOpacity
           onPress={() => {
             // Lógica de logout
-            router.replace('/');
+            router.replace('/login');
           }}
           className="bg-green-600 py-3 rounded-full items-center shadow-lg mb-6 mx-8"
         >
           <Text className="text-white font-semibold text-base">Sair da conta</Text>
         </TouchableOpacity>
 
-        {/* Espaço extra para “respiro” */}
+        {/* Espaço extra para "respiro" */}
         <View className="h-16" />
       </ScrollView>
     </KeyboardAvoidingView>

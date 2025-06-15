@@ -28,7 +28,28 @@ const stores = [
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const router = useRouter(); // para navegar via expo-router
+  const router = useRouter();
+
+  const handleCategoryPress = (category: string) => {
+    router.push({
+      pathname: '/(drawer)/categoria/[id]',
+      params: { id: category.toLowerCase() }
+    });
+  };
+
+  const handleOfferPress = (offer: any) => {
+    router.push({
+      pathname: '/(drawer)/produto/[id]',
+      params: { id: offer.name.toLowerCase().replace(/\s+/g, '-') }
+    });
+  };
+
+  const handleStorePress = (store: any) => {
+    router.push({
+      pathname: '/(drawer)/loja/[id]',
+      params: { id: store.name.toLowerCase().replace(/\s+/g, '-') }
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -43,17 +64,23 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <Banner />
+        <TouchableOpacity onPress={() => router.push('/(drawer)/banner')}>
+          <Banner />
+        </TouchableOpacity>
 
         <Text className="text-2xl font-semibold mt-5 mb-2 text-gray-800">Categorias</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
           {categories.map((item, index) => (
-            <View key={index} className="items-center mr-5">
+            <TouchableOpacity 
+              key={index} 
+              className="items-center mr-5"
+              onPress={() => handleCategoryPress(item.label)}
+            >
               <View className="w-20 h-20 rounded-full bg-lime-100 items-center justify-center">
                 <Image source={item.icon} className="w-15 h-15 bg-contain" />
               </View>
               <Text className="mt-2 text-sm text-gray-700">{item.label}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
@@ -65,24 +92,31 @@ export default function HomeScreen() {
           keyExtractor={(_, index) => index.toString()}
           className="mb-6"
           renderItem={({ item }) => (
-            <View className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mr-4 w-36 items-center">
+            <TouchableOpacity 
+              onPress={() => handleOfferPress(item)}
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mr-4 w-36 items-center"
+            >
               <Image source={item.image} className="w-16 h-16 mb-2" resizeMode="contain" />
               <Text className="text-xs text-center text-gray-700 mb-1m font-bold">{item.name}</Text>
               <Text className="text-green-600 font-bold text-xl">{item.price}</Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
 
         <Text className="text-base font-semibold mb-3 text-gray-800 gap-5">Lojas</Text>
         <View className="space-y-4 mb-6 gap-4">
           {stores.map((store, index) => (
-            <View key={index} className="flex-row items-center justify-between">
+            <TouchableOpacity 
+              key={index} 
+              className="flex-row items-center justify-between"
+              onPress={() => handleStorePress(store)}
+            >
               <View className="flex-row items-center space-x-3 gap-3">
                 <Image source={store.icon} className="w-15 h-15 rounded-full" />
                 <Text className="text-ms text-xl font-semibold text-gray-700">{store.name}</Text>
               </View>
               <Ionicons name="star-outline" size={20} color="#22c55e" />
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>

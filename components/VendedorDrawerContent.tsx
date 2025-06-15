@@ -5,15 +5,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 const menuItems = [
-  { label: 'Início', route: '/(drawer)', icon: 'home-outline' },
-  { label: 'Busca', route: '/(drawer)/buscar', icon: 'search-outline' },
-  { label: 'Perfil', route: '/(drawer)/perfil', icon: 'person-outline' },
-  { label: 'Sacola', route: '/(drawer)/sacola', icon: 'cart-outline' },
-  { label: 'Notificações', route: '/(drawer)/notificacoes', icon: 'notifications-outline' },
-  { label: 'Configurações', route: '/(drawer)/config', icon: 'settings-outline' },
+  { label: 'Home', route: '/(drawer)/vendedor/(tabs)/vendedor-home', icon: 'home-outline' },
+  { label: 'Adicionar Produto', route: '/(drawer)/vendedor/adcionar-produto', icon: 'add-circle-outline' },
+  { label: 'Pedidos Recentes', route: '/(drawer)/vendedor/pedidos-recentes', icon: 'receipt-outline' },
+  { label: 'Relatório de Desempenho', route: '/(drawer)/vendedor/relatorio-desempenho', icon: 'stats-chart-outline' },
+  { label: 'Perfil', route: '/(drawer)/vendedor/perfil-vendedor', icon: 'person-outline' },
 ] as const;
 
-export default function CustomDrawerContent(props: any) {
+export default function VendedorDrawerContent(props: any) {
   const router = useRouter();
 
   return (
@@ -44,12 +43,12 @@ export default function CustomDrawerContent(props: any) {
         </TouchableOpacity>
       ))}
 
-      {/* Botão Sair – menor, verde e ajustado */}
+      {/* Botão Sair */}
       <View className="flex-1 justify-end items-start mb-8">
         <TouchableOpacity
           className="flex-row items-center bg-green-600 rounded-full px-4 py-2"
           onPress={() => {
-            router.replace('/login'); // Ajuste aqui conforme seu fluxo de logout
+            router.replace('/login');
           }}
         >
           <Ionicons name="power-outline" size={18} color="white" className="mr-2" />
@@ -58,4 +57,4 @@ export default function CustomDrawerContent(props: any) {
       </View>
     </DrawerContentScrollView>
   );
-}
+} 

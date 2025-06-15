@@ -13,6 +13,29 @@ import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
+// Funções de formatação
+const formatCNPJ = (value: string) => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+  if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+  if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
+  return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
+};
+
+const formatCEP = (value: string) => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 5) return numbers;
+  return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
+};
+
+const formatPhone = (value: string) => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+};
+
 export default function RegisterSeller() {
   const router = useRouter();
 
@@ -95,7 +118,9 @@ export default function RegisterSeller() {
               placeholder="00.000.000/0000-00"
               className="bg-gray-200 p-3 rounded"
               value={cnpj}
-              onChangeText={setCnpj}
+              onChangeText={(text) => setCnpj(formatCNPJ(text))}
+              maxLength={18}
+              keyboardType="numeric"
             />
           </View>
 
@@ -125,7 +150,9 @@ export default function RegisterSeller() {
               placeholder="00000-000"
               className="bg-gray-200 p-3 rounded"
               value={cep}
-              onChangeText={setCep}
+              onChangeText={(text) => setCep(formatCEP(text))}
+              maxLength={9}
+              keyboardType="numeric"
             />
           </View>
 
@@ -173,7 +200,9 @@ export default function RegisterSeller() {
               placeholder="(00) 00000-0000"
               className="bg-gray-200 p-3 rounded"
               value={contato}
-              onChangeText={setContato}
+              onChangeText={(text) => setContato(formatPhone(text))}
+              maxLength={15}
+              keyboardType="numeric"
             />
           </View>
 
