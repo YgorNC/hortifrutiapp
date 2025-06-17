@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const menuItems = [
   { label: 'Início', route: '/(drawer)', icon: 'home-outline' },
-  { label: 'Busca', route: '/(drawer)/busca', icon: 'search-outline' },
+  { label: 'Busca', route: '/(drawer)/buscar', icon: 'search-outline' },
   { label: 'Perfil', route: '/(drawer)/perfil', icon: 'person-outline' },
   { label: 'Sacola', route: '/(drawer)/sacola', icon: 'cart-outline' },
   { label: 'Notificações', route: '/(drawer)/notificacoes', icon: 'notifications-outline' },

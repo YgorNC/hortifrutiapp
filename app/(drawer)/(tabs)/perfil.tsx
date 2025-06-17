@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,88 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, Feather } from '@expo/vector-icons';
 
 export default function Perfil() {
   const router = useRouter();
 
-  const [nome, setNome] = useState('João Silva');
-  const [cep, setCep] = useState('12345-678');
-  const [endereco, setEndereco] = useState('Rua das Flores, 123');
-  const [telefone, setTelefone] = useState('(11) 91234-5678');
-  const [email, setEmail] = useState('joao@email.com');
+  const [nome, setNome] = useState('');
+  const [cep, setCep] = useState('');
+  const [endereco, setEndereco] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userDataJson = await AsyncStorage.getItem('userData');
+        const userData = JSON.parse(userDataJson || '{}');
+        const id = userData?.id;
+
+        if (!id) {
+          Alert.alert('Erro', 'ID do usuário não encontrado.');
+          return;
+        }
+
+        setUserId(id);
+
+        const response = await fetch(`https://nova-pasta-orpin.vercel.app/api/users/${id}`);
+
+        if (!response.ok) {
+          throw new Error(`Erro na requisição: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setNome(data.name || '');
+        setCep(data.cep || '');
+        setEndereco(data.endereco || '');
+        setTelefone(data.phone || '');
+        setEmail(data.email || '');
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+        Alert.alert('Erro', 'Não foi possível carregar os dados do perfil.');
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const atualizarDados = async () => {
+    try {
+      if (!userId) {
+        Alert.alert('Erro', 'ID do usuário não encontrado.');
+        return;
+      }
+
+      const response = await fetch(`https://nova-pasta-orpin.vercel.app/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: nome,
+          cep,
+          endereco,
+          phone: telefone,
+          email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na atualização: ${response.status}`);
+      }
+
+      Alert.alert('Sucesso', 'Dados atualizados com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar dados:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar os dados.');
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -61,7 +131,7 @@ export default function Perfil() {
           {/* Campo: Nome */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-gray-700 mb-2">Nome</Text>
-            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 focus-within:border-green-500 px-4 py-3 shadow-sm">
+            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
               <Feather name="user" size={18} color="#6B7280" />
               <TextInput
                 className="flex-1 ml-3 text-sm text-gray-800 p-0"
@@ -76,7 +146,7 @@ export default function Perfil() {
           {/* Campo: CEP */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-gray-700 mb-2">CEP</Text>
-            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 focus-within:border-green-500 px-4 py-3 shadow-sm">
+            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
               <Feather name="map-pin" size={18} color="#6B7280" />
               <TextInput
                 className="flex-1 ml-3 text-sm text-gray-800 p-0"
@@ -92,7 +162,7 @@ export default function Perfil() {
           {/* Campo: Endereço */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-gray-700 mb-2">Endereço</Text>
-            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 focus-within:border-green-500 px-4 py-3 shadow-sm">
+            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
               <Feather name="home" size={18} color="#6B7280" />
               <TextInput
                 className="flex-1 ml-3 text-sm text-gray-800 p-0"
@@ -107,7 +177,7 @@ export default function Perfil() {
           {/* Campo: Telefone */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-gray-700 mb-2">Telefone</Text>
-            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 focus-within:border-green-500 px-4 py-3 shadow-sm">
+            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
               <Feather name="phone" size={18} color="#6B7280" />
               <TextInput
                 className="flex-1 ml-3 text-sm text-gray-800 p-0"
@@ -123,7 +193,7 @@ export default function Perfil() {
           {/* Campo: Email */}
           <View className="mb-6">
             <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
-            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 focus-within:border-green-500 px-4 py-3 shadow-sm">
+            <View className="flex-row items-center bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
               <Feather name="mail" size={18} color="#6B7280" />
               <TextInput
                 className="flex-1 ml-3 text-sm text-gray-800 p-0"
@@ -136,11 +206,9 @@ export default function Perfil() {
             </View>
           </View>
 
-          {/* Botão: Atualizar Dados (exemplo extra) */}
+          {/* Botão: Atualizar Dados */}
           <TouchableOpacity
-            onPress={() => {
-              // Aqui você poderia salvar as alterações
-            }}
+            onPress={atualizarDados}
             className="bg-green-600 py-3 rounded-full items-center mb-2 shadow-md"
           >
             <Text className="text-white font-semibold text-base">Atualizar</Text>
@@ -150,7 +218,6 @@ export default function Perfil() {
         {/* Botão de Sair */}
         <TouchableOpacity
           onPress={() => {
-            // Lógica de logout
             router.replace('/');
           }}
           className="bg-green-600 py-3 rounded-full items-center shadow-lg mb-6 mx-8"
@@ -158,7 +225,6 @@ export default function Perfil() {
           <Text className="text-white font-semibold text-base">Sair da conta</Text>
         </TouchableOpacity>
 
-        {/* Espaço extra para “respiro” */}
         <View className="h-16" />
       </ScrollView>
     </KeyboardAvoidingView>

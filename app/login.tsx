@@ -8,9 +8,14 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus, Video as ExpoVideo } from 'expo-av';
+import {
+  Video,
+  ResizeMode,
+  AVPlaybackStatus,
+  Video as ExpoVideo,
+} from 'expo-av';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,7 +23,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const videoRef = useRef<ExpoVideo>(null); // ✅ Tipagem correta
+  const videoRef = useRef<ExpoVideo>(null);
 
   function validarEmail(email: string) {
     const re = /\S+@\S+\.\S+/;
@@ -39,24 +44,46 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const response = await fetch(
+        'https://nova-pasta-orpin.vercel.app/api/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha: password }),
+        }
+      );
 
-      if (error) {
-        Alert.alert('Erro no login', error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert('Erro no login', data?.message || 'Credenciais inválidas.');
+        return;
+      }
+
+      if (!data?.tipo) {
+        console.error('Login: resposta não contém tipo:', data);
+        Alert.alert('Erro', 'Resposta inesperada do servidor.');
+        return;
+      }
+
+
+      await AsyncStorage.setItem('userData', JSON.stringify(data));
+
+      Alert.alert('Sucesso', `Login realizado como ${data.tipo}`);
+
+      if (data.tipo === 'vendedor') {
+        router.push('/(drawer)/vendedor/(tabs)/vendedor-home');
       } else {
         router.push('/(drawer)/(tabs)');
       }
     } catch (err) {
-      Alert.alert('Erro', 'Algo deu errado. Tente novamente.');
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível se conectar ao servidor.');
     } finally {
       setLoading(false);
     }
   }
 
-  // ✅ Garante que o vídeo toque ao focar e pare ao sair
   useFocusEffect(
     useCallback(() => {
       const playVideo = async () => {
@@ -68,16 +95,15 @@ export default function LoginScreen() {
 
       return () => {
         if (videoRef.current) {
-          videoRef.current.stopAsync(); // para evitar que reinicie congelado
+          videoRef.current.stopAsync();
         }
       };
     }, [])
   );
 
-  // ✅ Status de reprodução para pausar no último frame
   const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if ('didJustFinish' in status && status.didJustFinish) {
-      videoRef.current?.pauseAsync(); // mantém no último frame
+      videoRef.current?.pauseAsync();
     }
   };
 
@@ -123,7 +149,8 @@ export default function LoginScreen() {
         <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
-          className={`bg-green-600 w-1/2 py-3 rounded mb-4 ${loading ? 'opacity-50' : ''}`}
+          className={`bg-green-600 w-1/2 py-3 rounded mb-4 ${loading ? 'opacity-50' : ''
+            }`}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />

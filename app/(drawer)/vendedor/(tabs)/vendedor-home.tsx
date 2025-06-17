@@ -1,141 +1,262 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { DrawerActions, useNavigation } from '@react-navigation/native';
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VendedorHomeScreen() {
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const [loading, setLoading] = useState(true);
+  const [vendedorData, setVendedorData] = useState<any>(null);
+  const [produtos, setProdutos] = useState<any[]>([]);
+  const [pedidos, setPedidos] = useState<any[]>([]);
+
+  const baseUrl = 'https://nova-pasta-orpin.vercel.app/api';
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const userDataString = await AsyncStorage.getItem('userData');
+        const userData = userDataString ? JSON.parse(userDataString) : null;
+
+        if (!userData || userData.tipo !== 'vendedor') {
+          navigation.navigate('Login');
+          return;
+        }
+
+        const response = await fetch(`${baseUrl}/products/vendedor/${userData.id}`);
+        const text = await response.text();
+        try {
+          const vendedorJson = JSON.parse(text);
+          if (response.ok && vendedorJson) setVendedorData(vendedorJson);
+        } catch (err) {
+          console.error('Erro ao parsear JSON:', err);
+        }
+
+        const produtosResponse = await fetch(`${baseUrl}/products/${userData.id}`);
+        const produtosJson = await produtosResponse.json();
+        if (produtosResponse.ok && Array.isArray(produtosJson.data)) {
+          setProdutos(produtosJson.data);
+        }
+
+        const pedidosResponse = await fetch(`${baseUrl}/vendedor/${userData.id}/pedidos`);
+        const pedidosJson = await pedidosResponse.json();
+        if (pedidosResponse.ok && Array.isArray(pedidosJson.data)) {
+          setPedidos(pedidosJson.data);
+        }
+        if (pedidosJson.data.length === 0) {
+          Alert.alert('Nenhum pedido encontrado', 'Você ainda não tem pedidos.');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigation]);
+
   const handleAdicionarProduto = () => {
     navigation.navigate('adicionar-produto');
   };
+
+  const handleEditarProduto = (produto: string) => {
+    navigation.navigate('editar-produto', { produto });
+  };
+
+  const handleRemoverProduto = async (produtoId: string) => {
+    Alert.alert('Remover Produto', 'Tem certeza que deseja remover este produto?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Remover',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await fetch(`${baseUrl}/products/${produtoId}`, {
+              method: 'DELETE',
+            });
+            if (response.ok) {
+              setProdutos(produtos.filter((p) => p.id !== produtoId));
+            } else {
+              Alert.alert('Erro', 'Não foi possível remover o produto.');
+            }
+          } catch (error) {
+            console.error('Erro ao remover produto:', error);
+          }
+        },
+      },
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#3DC16B" />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
-      {/* Header */}
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContainer}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={styles.menuBtn}>
+        <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
           <Ionicons name="menu" size={28} color="#222" />
         </TouchableOpacity>
-        <Text style={styles.hello}>Olá, Vendedor!</Text>
-        <TouchableOpacity style={styles.settingsBtn}>
-          <Ionicons name="settings" size={22} color="#222" />
+        <Text style={styles.hello}>Olá, {vendedorData?.nomeNegocio || 'Vendedor'}!</Text>
+        <TouchableOpacity>
+          <Ionicons name="settings-outline" size={24} color="#222" />
         </TouchableOpacity>
       </View>
 
-      {/* Painel de Desempenho */}
-      <TouchableOpacity>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Painel de Desempenho</Text>
         <View style={styles.metricsRow}>
-          <View style={styles.metricCol}>
-            <Text style={styles.metricLabel}>Pedidos realizados</Text>
-            <Text style={styles.metricValue}>12</Text>
+          <View style={styles.metricBox}>
+            <Text style={styles.metricLabel}>Pedidos</Text>
+            <Text style={styles.metricValue}>{pedidos.length}</Text>
           </View>
-          <View style={styles.metricCol}>
-            <Text style={styles.metricLabel}>Valor vendido</Text>
-            <Text style={styles.metricValue}>R$ 42,00</Text>
+          <View style={styles.metricBox}>
+            <Text style={styles.metricLabel}>Total Vendido</Text>
+            <Text style={styles.metricValue}>R$ {pedidos.reduce((t, p) => t + (p?.valorTotal || 0), 0).toFixed(2)}</Text>
           </View>
-        </View>
-        <Text style={styles.metricLabel}>Produtos mais vendidos</Text>
-        <Text style={styles.metricValue}>Alface, Tomate</Text>
-        <View style={styles.chartTabsRow}>
-          <Text style={styles.tabActive}>Dia</Text>
-          <Text style={styles.tab}>Semana</Text>
-          <Text style={styles.tab}>Mês</Text>
-        </View>
-        
-        {/* Gráfico fake */}
-        <View style={styles.chartBarRow}>
-          <View style={[styles.chartBar, { height: 20 }]} />
-          <View style={[styles.chartBar, { height: 35 }]} />
-          <View style={[styles.chartBar, { height: 50 }]} />
-          <View style={[styles.chartBar, { height: 30 }]} />
-          <View style={[styles.chartBar, { height: 60 }]} />
         </View>
       </View>
-      </TouchableOpacity>
 
-      {/* Adicionar produto */}
-      <TouchableOpacity onPress={handleAdicionarProduto}>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>+ Adicionar produto</Text>
-        <View style={styles.produtoRow}>
-          <Text style={styles.produtoNome}>Cebola</Text>
-          <Text style={styles.produtoPreco}>R$ 6,70</Text>
-          <Text style={styles.produtoQtd}>25 kg</Text>
-        </View>
-        <View style={styles.produtoRow}>
-          <Text style={styles.produtoNome}>Repolho</Text>
-          <Text style={styles.produtoPreco}>R$ 4,99</Text>
-          <Text style={styles.produtoQtd}>8 kg</Text>
-        </View>
-      </View>
-      </TouchableOpacity>
-
-      {/* Pedidos Recentes */}
-      <TouchableOpacity>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pedidos Recentes</Text>
-          <View style={styles.tabsRow}>
-            <Text style={styles.tabActive}>Todos</Text>
-            <Text style={styles.tab}>Pendentes</Text>
-            <Text style={styles.tab}>Entregues</Text>
-          </View>
-          <View style={styles.pedidoItem}>
-            <Text style={styles.pedidoId}>Pedido #1245</Text>
-            <Text style={styles.pedidoCliente}>João</Text>
-            <Text style={styles.pedidoInfo}>Dntrega hoje   R$ 47,00</Text>
-          </View>
-          <View style={styles.pedidoItem}>
-            <Text style={styles.pedidoId}>Pedido #1246</Text>
-            <Text style={styles.pedidoCliente}>Maria</Text>
-            <Text style={styles.pedidoInfo}>Aguardando confirmação</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
-
-      {/* Info do estabelecimento */}
-      <TouchableOpacity>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Verdurão Dona Florinda</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+        <Text style={styles.cardTitle}>{vendedorData?.nomeNegocio || 'Estabelecimento'}</Text>
+        <View style={styles.statusRow}>
           <View style={styles.statusDot} />
-          <Text style={styles.onlineText}>Online</Text>
+          <Text style={styles.statusText}>Online</Text>
         </View>
       </View>
-      </TouchableOpacity>
+
+      <View style={styles.card}>
+        <View style={styles.produtosHeader}>
+          <Text style={styles.cardTitle}>Seus Produtos</Text>
+          <TouchableOpacity onPress={handleAdicionarProduto}>
+            <Ionicons name="add-circle-outline" size={24} color="#3DC16B" />
+          </TouchableOpacity>
+        </View>
+        {produtos.length > 0 ? (
+          produtos.map((produto, index) => (
+            <View key={index} style={styles.produtoRow}>
+              <View style={styles.produtoInfo}>
+                <Text style={styles.produtoNome}>{produto.nome}</Text>
+                <Text style={styles.produtoPreco}>R$ {produto.price}</Text>
+                <Text style={styles.produtoQtd}>{produto.quantidade} kg</Text>
+              </View>
+              <View style={styles.produtoActions}>
+                <TouchableOpacity onPress={() => handleEditarProduto(produto)}>
+                  <Ionicons name="create-outline" size={20} color="#3B4B47" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleRemoverProduto(produto.id)}>
+                  <Ionicons name="trash-outline" size={20} color="red" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>Nenhum produto cadastrado.</Text>
+        )}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Pedidos Recentes</Text>
+        {pedidos.length > 0 ? (
+          pedidos.slice(0, 5).map((pedido, index) => (
+            <View key={index} style={styles.pedidoItem}>
+              <Text style={styles.pedidoId}>Pedido #{pedido.id}</Text>
+              <Text style={styles.pedidoCliente}>{pedido.clienteNome}</Text>
+              <Text style={styles.pedidoValor}>R$ {pedido?.valorTotal?.toFixed(2) || '0.00'}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyText}>Nenhum pedido recente.</Text>
+        )}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingTop: 46 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  hello: { fontSize: 20, fontWeight: '500', color: '#222' },
-  settingsBtn: { backgroundColor: '#F3F3F3', borderRadius: 20, padding: 8 },
-  card: { backgroundColor: '#E3ECE8', borderRadius: 12, padding: 14, marginBottom: 14, width: '100%'},
-  cardTitle: { fontWeight: 'bold', fontSize: 16, color: '#3B4B47', marginBottom: 8 },
-  metricsRow: { flexDirection: 'row', marginBottom: 4 },
-  metricCol: { flex: 1 },
-  metricLabel: { fontSize: 13, color: '#3B4B47' },
-  metricValue: { fontWeight: 'bold', fontSize: 15, color: '#222' },
-  chartTabsRow: { flexDirection: 'row', marginTop: 8, marginBottom: 4, gap: 12 },
-  tab: { color: '#3B4B47', fontSize: 13, marginRight: 12 },
-  tabActive: { color: '#222', fontWeight: 'bold', fontSize: 13, marginRight: 12, textDecorationLine: 'underline' },
-  chartBarRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 70, marginTop: 8, marginBottom: 4 },
-  chartBar: { width: 14, backgroundColor: '#B6CFC2', borderRadius: 4 },
-  produtoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  produtoNome: { fontSize: 15, color: '#222' },
-  produtoPreco: { fontWeight: 'bold', color: '#3B4B47', fontSize: 15 },
-  produtoQtd: { color: '#3B4B47', fontSize: 13 },
-  tabsRow: { flexDirection: 'row', gap: 12, marginBottom: 6 },
-  pedidoItem: { marginBottom: 6 },
-  pedidoId: { fontWeight: 'bold', color: '#222' },
-  pedidoCliente: { color: '#3B4B47', fontSize: 13 },
-  pedidoInfo: { color: '#3B4B47', fontSize: 13 },
-  starsRow: { flexDirection: 'row', marginVertical: 6 },
-  msg: { color: '#3B4B47', fontSize: 13 },
-  statusDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#3DC16B', marginRight: 6 },
-  onlineText: { color: '#3B4B47', fontSize: 13 },
-  menuBtn: { marginRight: 12 },
-}); 
+  container: { flex: 1, backgroundColor: '#F9F9F9', marginTop: 35 },
+  scrollContainer: { padding: 16, paddingBottom: 32 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  hello: { fontSize: 22, fontWeight: '600', color: '#333' },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardTitle: { fontWeight: 'bold', fontSize: 18, color: '#333', marginBottom: 12 },
+  metricsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  metricBox: { flex: 1 },
+  metricLabel: { fontSize: 14, color: '#666' },
+  metricValue: { fontSize: 16, fontWeight: 'bold', color: '#222' },
+  statusRow: { flexDirection: 'row', alignItems: 'center' },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#3DC16B',
+    marginRight: 6,
+  },
+  statusText: { color: '#3DC16B', fontWeight: '600' },
+  produtosHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  produtoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 8,
+  },
+  produtoInfo: {},
+  produtoNome: { fontSize: 16, fontWeight: '500' },
+  produtoPreco: { fontSize: 14, color: '#555' },
+  produtoQtd: { fontSize: 14, color: '#888' },
+  produtoActions: { flexDirection: 'row', gap: 12 },
+  emptyText: { color: '#999', textAlign: 'center', marginTop: 8 },
+  pedidoItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingVertical: 8,
+  },
+  pedidoId: { fontWeight: 'bold', fontSize: 15 },
+  pedidoCliente: { color: '#444' },
+  pedidoValor: { color: '#3DC16B', fontWeight: 'bold' },
+});

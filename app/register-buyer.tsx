@@ -1,9 +1,8 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Checkbox from 'expo-checkbox';
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 
 export default function RegisterBuyer() {
   const router = useRouter();
@@ -13,29 +12,18 @@ export default function RegisterBuyer() {
   const [email, setEmail] = useState('');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [receiveOffers, setReceiveOffers] = useState(false);
 
-  // Função para formatar data enquanto digita (dd/MM/yyyy)
   function formatarData(value: string) {
-    // Remove tudo que não for número
     const apenasNumeros = value.replace(/\D/g, '');
-
     let formatted = '';
-
     if (apenasNumeros.length <= 2) {
       formatted = apenasNumeros;
     } else if (apenasNumeros.length <= 4) {
       formatted = apenasNumeros.slice(0, 2) + '/' + apenasNumeros.slice(2);
-    } else if (apenasNumeros.length <= 8) {
-      formatted =
-        apenasNumeros.slice(0, 2) +
-        '/' +
-        apenasNumeros.slice(2, 4) +
-        '/' +
-        apenasNumeros.slice(4, 8);
     } else {
-      // Limita a 8 dígitos (ddMMyyyy)
       formatted =
         apenasNumeros.slice(0, 2) +
         '/' +
@@ -43,20 +31,14 @@ export default function RegisterBuyer() {
         '/' +
         apenasNumeros.slice(4, 8);
     }
-
     return formatted;
   }
 
-  // Função para converter data dd/MM/yyyy -> yyyy-MM-dd
   function converterDataParaISO(dataPtBr: string) {
     const partes = dataPtBr.split('/');
     if (partes.length !== 3) return null;
     const [dia, mes, ano] = partes;
-    if (
-      !/^\d{2}$/.test(dia) ||
-      !/^\d{2}$/.test(mes) ||
-      !/^\d{4}$/.test(ano)
-    ) {
+    if (!/^\d{2}$/.test(dia) || !/^\d{2}$/.test(mes) || !/^\d{4}$/.test(ano)) {
       return null;
     }
     return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
@@ -73,41 +55,38 @@ export default function RegisterBuyer() {
       return;
     }
 
-    const birthDateISO = converterDataParaISO(birthDate);
-    if (!birthDateISO) {
+    const nascimento = converterDataParaISO(birthDate);
+    if (!nascimento) {
       Alert.alert('Erro', 'Data de nascimento inválida. Use o formato dd/mm/yyyy.');
       return;
     }
 
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    try {
+      const response = await fetch('https://nova-pasta-orpin.vercel.app/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          nascimento,
+          senha: password,
+          email,
+          phone,
+        }),
+      });
 
-    if (signUpError) {
-      Alert.alert('Erro ao criar conta', signUpError.message);
-      return;
-    }
+      const data = await response.json();
 
-    const userId = authData.user?.id;
+      if (!response.ok) {
+        Alert.alert('Erro ao cadastrar', data?.message || 'Erro inesperado');
+        return;
+      }
 
-    if (!userId) {
-      Alert.alert('Erro', 'Usuário não criado corretamente.');
-      return;
-    }
-
-    const { error: insertError } = await supabase.from('buyers').insert({
-      user_id: userId,
-      name: name,
-      birth_date: birthDateISO,
-      receive_offers: receiveOffers,
-    });
-
-    if (insertError) {
-      Alert.alert('Erro ao salvar dados adicionais', insertError.message);
-    } else {
       Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
       router.push('/login');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível se conectar ao servidor.');
     }
   };
 
@@ -118,7 +97,7 @@ export default function RegisterBuyer() {
       </TouchableOpacity>
 
       <View className="flex gap-4">
-        <Text className="text-center font-extrabold mb-7 font">
+        <Text className="text-center font-extrabold mb-7">
           PREENCHA OS CAMPOS PARA CRIAR SUA CONTA
         </Text>
 
@@ -141,6 +120,17 @@ export default function RegisterBuyer() {
             onChangeText={(text) => setBirthDate(formatarData(text))}
             keyboardType="numeric"
             maxLength={10}
+          />
+        </View>
+
+        <View className="mb-3">
+          <Text className="mb-1 font-bold text-sm">Telefone</Text>
+          <TextInput
+            placeholder="(99) 99999-9999"
+            className="bg-gray-200 p-3 rounded"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
           />
         </View>
 
@@ -199,7 +189,6 @@ export default function RegisterBuyer() {
           </Text>
         </View>
       </View>
-
 
       <View className="flex items-center top-10">
         <TouchableOpacity
