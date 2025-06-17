@@ -24,9 +24,39 @@ export default function RegisterSeller() {
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
   const [contato, setContato] = useState('');
-
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [receiveOffers, setReceiveOffers] = useState(false);
+
+  // Funções de formatação
+  function formatarCNPJ(value: string) {
+    const digits = value.replace(/\D/g, '');
+    return digits
+      .replace(/^(\d{2})(\d)/, '$1.$2')
+      .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+      .replace(/\.(\d{3})(\d)/, '.$1/$2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .slice(0, 18);
+  }
+
+  function formatarCEP(value: string) {
+    const digits = value.replace(/\D/g, '');
+    return digits.replace(/^(\d{5})(\d)/, '$1-$2').slice(0, 9);
+  }
+
+  function formatarTelefone(value: string) {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 10) {
+      return digits
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .slice(0, 14);
+    } else {
+      return digits
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .slice(0, 15);
+    }
+  }
 
   const handleRegister = async () => {
     if (
@@ -95,7 +125,6 @@ export default function RegisterSeller() {
           CADASTRO DE VENDEDOR
         </Text>
 
-        {/* campos de input */}
         <View className="mb-3">
           <Text className="mb-1 font-bold text-sm">Nome do negócio*</Text>
           <TextInput
@@ -111,8 +140,10 @@ export default function RegisterSeller() {
           <TextInput
             placeholder="00.000.000/0000-00"
             className="bg-gray-200 p-3 rounded"
+            keyboardType="numeric"
             value={cnpj}
-            onChangeText={setCnpj}
+            onChangeText={(text) => setCnpj(formatarCNPJ(text))}
+            maxLength={18}
           />
         </View>
 
@@ -144,8 +175,10 @@ export default function RegisterSeller() {
           <TextInput
             placeholder="00000-000"
             className="bg-gray-200 p-3 rounded"
+            keyboardType="numeric"
             value={cep}
-            onChangeText={setCep}
+            onChangeText={(text) => setCep(formatarCEP(text))}
+            maxLength={9}
           />
         </View>
 
@@ -166,6 +199,7 @@ export default function RegisterSeller() {
             className="bg-gray-200 p-3 rounded"
             value={numero}
             onChangeText={setNumero}
+            keyboardType="numeric"
           />
         </View>
 
@@ -185,8 +219,9 @@ export default function RegisterSeller() {
             placeholder="(00) 00000-0000"
             className="bg-gray-200 p-3 rounded"
             value={contato}
-            onChangeText={setContato}
+            onChangeText={(text) => setContato(formatarTelefone(text))}
             keyboardType="phone-pad"
+            maxLength={15}
           />
         </View>
 

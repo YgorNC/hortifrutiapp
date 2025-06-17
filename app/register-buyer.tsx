@@ -34,6 +34,23 @@ export default function RegisterBuyer() {
     return formatted;
   }
 
+  function formatarTelefone(value: string) {
+    const apenasNumeros = value.replace(/\D/g, '');
+    let formatted = '';
+
+    if (apenasNumeros.length <= 2) {
+      formatted = `(${apenasNumeros}`;
+    } else if (apenasNumeros.length <= 6) {
+      formatted = `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`;
+    } else if (apenasNumeros.length <= 10) {
+      formatted = `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 6)}-${apenasNumeros.slice(6)}`;
+    } else {
+      formatted = `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`;
+    }
+
+    return formatted;
+  }
+
   function converterDataParaISO(dataPtBr: string) {
     const partes = dataPtBr.split('/');
     if (partes.length !== 3) return null;
@@ -130,7 +147,8 @@ export default function RegisterBuyer() {
             className="bg-gray-200 p-3 rounded"
             keyboardType="phone-pad"
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(text) => setPhone(formatarTelefone(text))}
+            maxLength={15}
           />
         </View>
 
